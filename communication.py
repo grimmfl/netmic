@@ -35,9 +35,7 @@ class Message:
     def decode(data: bytes) -> "Message":
         try:
             return pickle.loads(data)
-        except pickle.UnpicklingError:
-            return Message(ControlMessage.NONE, np.zeros((512, 16)))
-        except ValueError:
+        except Exception:
             return Message(ControlMessage.NONE, np.zeros((512, 16)))
 
     @staticmethod
