@@ -36,7 +36,9 @@ class Message:
         try:
             return pickle.loads(data)
         except pickle.UnpicklingError:
-            return Message(ControlMessage.NONE, np.zeros(512))
+            return Message(ControlMessage.NONE, np.zeros((512, 16)))
+        except ValueError:
+            return Message(ControlMessage.NONE, np.zeros((512, 16)))
 
     @staticmethod
     def data_message(data: Any) -> "Message":
