@@ -34,7 +34,7 @@ class ConfigBase:
 
     def from_json(self, content: str):
         data = json.loads(content)
-        self.device_id = data["device_id"]
+        self.device_id = int(data["device_id"])
 
     def try_load_config(self) -> bool:
         cwd = os.getcwd()
@@ -49,7 +49,7 @@ class ConfigBase:
     def prompt_device_id(self):
         print("Please enter a device id:")
         print(query_devices())
-        self.device_id = input()
+        self.device_id = int(input())
 
     def prompt_save(self):
         print("Do you want to save this configuration? (y/n)")
@@ -62,8 +62,10 @@ class ConfigBase:
 class ClientConfig(ConfigBase):
     def __init__(self):
         self.mode: int = 0
+        self.server_ip: str = ""
 
         prompts = [
+            self.prompt_server_ip,
             self.prompt_mode
         ]
 
@@ -75,11 +77,20 @@ class ClientConfig(ConfigBase):
         print("\t 1 - Push-to-Talk")
         self.mode = int(input())
 
+    def prompt_server_ip(self):
+        print("Please enter the ip address of the server:")
+        self.server_ip = input()
+
+    def from_json(self, content: str):
+        data = json.loads(content)
+        self.device_id = int(data["device_id"])
+        self.mode = int(data["mode"])
+        self.server_ip = data["server_ip"]
+
 
 class ServerConfig(ConfigBase):
     def __init__(self):
         super().__init__(SERVER_CONFIG_FILE, [])
-
 
 
 if __name__ == '__main__':

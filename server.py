@@ -4,19 +4,31 @@ from audio import register_input_callback
 from base import NetMicBase
 from communication import Message, ControlMessage, CommunicationException
 from config import ServerConfig
+import threading
 
 
 class NetMicServer(NetMicBase):
-    def __init__(self, config: ServerConfig, port: int, remote_host: str, remote_port: int):
-        super().__init__(port, remote_host, remote_port, True)
+    def __init__(self, config: ServerConfig, port: int, remote_port: int):
+        super().__init__(port, remote_port, True)
         self.device_id = config.device_id
+
+    def stop_transfer(self):
+        self.channel_as_client.close()
+        self.channel_as_server.respond(Message.control_message(ControlMessage.ACK))
+
+    def listen_for_controls(self):
+        message = self.channel_as_server.receive().control
+        print(message)
+        if message == ControlMessage.STOP:
+            self.stop_transfer()
 
     def run(self):
         def callback(data: np.ndarray, *_):
             self.channel_as_client.send(Message.data_message(data))
+            del data
 
         self.channel_as_server.open()
-        self.channel_as_server.listen()
+        address = self.channel_as_server.listen()
         message = self.channel_as_server.receive()
 
         if message.control != ControlMessage.START:
@@ -28,11 +40,14 @@ class NetMicServer(NetMicBase):
         if ack != ControlMessage.ACK:
             raise CommunicationException("ACK was not acknowledged")
 
-        self.channel_as_client.open()
+        self.channel_as_client.open(address)
 
-        register_input_callback(self.device_id, callback)
+        threading.Thread(target=register_input_callback, args=[self.device_id, callback]).start()
+        threading.Thread(target=self.listen_for_controls).start()
+
+        # TODO stop threads
 
 
 if __name__ == '__main__':
-    server = NetMicServer(ServerConfig(), 7778, "127.0.0.1", 7777)
+    server = NetMicServer(ServerConfig(), 7778, 7777)
     server.run()

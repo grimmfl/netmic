@@ -7,6 +7,8 @@ from audio import register_output_callback
 from base import NetMicBase
 from communication import Message, ControlMessage, CommunicationException
 from config import ClientConfig
+from keyboard import listen, keyboard
+import threading
 
 
 class NetMicMode(Enum):
@@ -30,14 +32,13 @@ def parse_args():
 
 
 class NetMicClient(NetMicBase):
-    def __init__(self, config: ClientConfig, port: int, remote_host: str, remote_port: int):
-        super().__init__(port, remote_host, remote_port, False)
+    def __init__(self, config: ClientConfig, port: int, remote_port: int):
+        super().__init__(port, remote_port, False)
         self.mode: NetMicMode = map_mode(config.mode)
         self.device_id: int = config.device_id
+        self.server_ip: str = config.server_ip
 
-    def run(self):
-        self.channel_as_client.open()
-
+    def init_transfer(self):
         self.channel_as_client.send(Message.control_message(ControlMessage.START))
 
         ack = self.channel_as_client.receive_response()
@@ -53,9 +54,44 @@ class NetMicClient(NetMicBase):
         def callback(output: np.ndarray, *_):
             data = self.channel_as_server.receive().data
             output[:] = data
+
         register_output_callback(self.device_id, callback)
+
+    def stop_transfer(self):
+        self.channel_as_client.send(Message.control_message(ControlMessage.STOP))
+
+        ack = self.channel_as_client.receive_response().control
+        if ack != ControlMessage.ACK:
+            raise CommunicationException("STOP was not acknowledged")
+
+        self.channel_as_server.close()
+
+    def on_press(self, key: keyboard.Key):
+        try:
+            if key.char == "t":
+                threading.Thread(target=self.init_transfer).start()
+        except AttributeError:
+            pass
+
+    def on_release(self, key: keyboard.Key):
+        try:
+            if key.char == "t":
+                self.stop_transfer()
+        except AttributeError:
+            pass
+
+    def run(self):
+        self.channel_as_client.open(self.server_ip)
+
+        # TODO add transfer running flag
+
+        if self.mode == NetMicMode.CONSTANT:
+            self.init_transfer()
+
+        if self.mode == NetMicMode.PUSH_TO_TALK:
+            listen(self.on_press, self.on_release)
 
 
 if __name__ == '__main__':
-    client = NetMicClient(ClientConfig(), 7777, "127.0.0.1", 7778)
+    client = NetMicClient(ClientConfig(), 7777,7778)
     client.run()

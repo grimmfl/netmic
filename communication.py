@@ -47,17 +47,16 @@ class Message:
 
 
 class CommunicationClient:
-    def __init__(self, remote_host: str, remote_port: int, message_size: int):
-        self.remote_host: str = remote_host
+    def __init__(self, remote_port: int, message_size: int):
         self.remote_port: int = remote_port
         self.message_size: int = message_size
         self.socket = None
 
-    def open(self):
+    def open(self, host: str):
         while True:
             try:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.socket.connect((self.remote_host, self.remote_port))
+                self.socket.connect((host, self.remote_port))
                 return
             except ConnectionRefusedError:
                 time.sleep(0.2)
@@ -67,7 +66,6 @@ class CommunicationClient:
 
     def send(self, message: Message):
         encoded = message.encode()
-        print(len(encoded))
         self.socket.sendall(encoded)
 
     def receive_response(self) -> Message:
@@ -89,9 +87,10 @@ class CommunicationServer:
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((self.HOST, self.port))
 
-    def listen(self):
+    def listen(self) -> str:
         self.socket.listen()
-        self.conn, _ = self.socket.accept()
+        self.conn, addr = self.socket.accept()
+        return addr[0]
 
     def close(self):
         self.conn.close()
