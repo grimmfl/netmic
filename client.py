@@ -33,7 +33,7 @@ def parse_args():
 
 class NetMicClient(NetMicBase):
     def __init__(self, config: ClientConfig, port: int, remote_port: int):
-        super().__init__(port, remote_port, False)
+        super().__init__(config.my_ip, port, remote_port, False)
         self.mode: NetMicMode = map_mode(config.mode)
         self.device_id: int = config.device_id
         self.server_ip: str = config.server_ip

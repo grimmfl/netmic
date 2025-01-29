@@ -9,7 +9,7 @@ import threading
 
 class NetMicServer(NetMicBase):
     def __init__(self, config: ServerConfig, port: int, remote_port: int):
-        super().__init__(port, remote_port, True)
+        super().__init__(config.my_ip, port, remote_port, True)
         self.device_id = config.device_id
 
     def stop_transfer(self):

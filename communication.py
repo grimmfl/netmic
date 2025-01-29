@@ -74,9 +74,8 @@ class CommunicationClient:
 
 
 class CommunicationServer:
-    HOST = "127.0.0.1"
-
-    def __init__(self, port: int, message_size: int):
+    def __init__(self, host: str, port: int, message_size: int):
+        self.host: str = host
         self.port: int = port
         self.message_size: int = message_size
         self.socket = None
@@ -85,7 +84,7 @@ class CommunicationServer:
     def open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.HOST, self.port))
+        self.socket.bind((self.host, self.port))
 
     def listen(self) -> str:
         self.socket.listen()

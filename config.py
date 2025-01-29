@@ -13,11 +13,13 @@ class ConfigBase:
     def __init__(self, config_file: str, prompts: List[Callable]) -> None:
         self.config_file: str = config_file
         self.device_id: int = 0
+        self.my_ip: str = ""
 
         if self.try_load_config():
             return
 
         self.prompt_device_id()
+        self.prompt_my_ip()
 
         for prompt in prompts:
             prompt()
@@ -35,6 +37,7 @@ class ConfigBase:
     def from_json(self, content: str):
         data = json.loads(content)
         self.device_id = int(data["device_id"])
+        self.my_ip = data["my_ip"]
 
     def try_load_config(self) -> bool:
         cwd = os.getcwd()
@@ -50,6 +53,10 @@ class ConfigBase:
         print("Please enter a device id:")
         print(query_devices())
         self.device_id = int(input())
+
+    def prompt_my_ip(self):
+        print("Please enter the ip of this device:")
+        self.my_ip = input()
 
     def prompt_save(self):
         print("Do you want to save this configuration? (y/n)")
@@ -82,8 +89,8 @@ class ClientConfig(ConfigBase):
         self.server_ip = input()
 
     def from_json(self, content: str):
+        super().from_json(content)
         data = json.loads(content)
-        self.device_id = int(data["device_id"])
         self.mode = int(data["mode"])
         self.server_ip = data["server_ip"]
 
