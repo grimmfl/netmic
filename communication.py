@@ -4,6 +4,8 @@ from typing import Any
 from enum import Enum
 import time
 
+import numpy as np
+
 DELIMITER = "#"
 CONTROL_MESSAGE_SIZE = 93
 DATA_MESSAGE_SIZE = 2281
@@ -31,7 +33,10 @@ class Message:
 
     @staticmethod
     def decode(data: bytes) -> "Message":
-        return pickle.loads(data)
+        try:
+            return pickle.loads(data)
+        except pickle.UnpicklingError:
+            return Message(ControlMessage.NONE, np.zeros(512))
 
     @staticmethod
     def data_message(data: Any) -> "Message":
