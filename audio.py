@@ -13,7 +13,7 @@ def query_devices():
 
 
 def register_input_callback(device: int, callback: Callable[[np.ndarray, Any, Any, Any], None]):
-    with sd.InputStream(device=device, channels=1, callback=callback):
+    with sd.InputStream(device=device, channels=1, callback=callback, blocksize=512):
         print('-' * 80)
         print('press Return to quit')
         print('-' * 80)
@@ -21,7 +21,7 @@ def register_input_callback(device: int, callback: Callable[[np.ndarray, Any, An
 
 
 def register_output_callback(device: int, callback: Callable[[np.ndarray, Any, Any, Any], None]):
-    with sd.OutputStream(device=device, channels=1, callback=callback):
+    with sd.OutputStream(device=device, channels=1, callback=callback, blocksize=512):
         print('#' * 80)
         print('press Return to quit')
         print('#' * 80)
