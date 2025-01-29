@@ -21,7 +21,7 @@ def register_input_callback(device: int, callback: Callable[[np.ndarray, Any, An
 
 
 def register_output_callback(device: int, callback: Callable[[np.ndarray, Any, Any, Any], None]):
-    with sd.OutputStream(device=device, channels=1, callback=callback, blocksize=512):
+    with sd.OutputStream(device=device, channels=16, callback=callback, blocksize=512):
         print('#' * 80)
         print('press Return to quit')
         print('#' * 80)
